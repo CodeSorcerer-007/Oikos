@@ -19,16 +19,14 @@
 
 ---
 
-## 🎬 20-Second Launch Video
+## 🎬 20-Second Launch Demo
 
 <p align="center">
-  <video src="brag-output/brag.mp4" controls width="100%"></video>
-  <br/>
   <a href="brag-output/brag.mp4">
-    <img src="brag-output/brag.jpg" alt="Oikos 20-Second Launch Video Poster" width="100%" />
+    <img src="brag-output/brag.gif" alt="Oikos 20-Second Launch Demo (Autoplaying)" width="100%" />
   </a>
   <br/>
-  <b>▶️ <a href="brag-output/brag.mp4">Watch the 20-Second Launch Video (1080p MP4 · 3.9 MB)</a></b>
+  <b>▶️ <a href="brag-output/brag.mp4">Watch Full 1080p Video with Audio (brag.mp4 · 3.9 MB)</a></b>
 </p>
 
 ---
