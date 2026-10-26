@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Oikos — Launch Video</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --bg: #0F1411;
+        --surface: rgba(26, 35, 29, 0.85);
+        --surface-border: rgba(78, 161, 87, 0.25);
+        --primary: #4EA157;
+        --accent: #E5953E;
+        --honey: #D4822B;
+        --ink: #FAF9F5;
+        --ink-muted: #9EABA1;
+        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--bg);
+        font-family: var(--font);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: radial-gradient(circle at 50% 50%, #152219 0%, #0F1411 75%);
+      }
+
+      /* Glow background */
+      .ambient-glow {
+        position: absolute;
+        width: 900px;
+        height: 900px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(78, 161, 87, 0.18) 0%, rgba(15, 20, 17, 0) 70%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+
+      /* Generic Scene Layout */
+      .scene {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* Scene 1: Hook */
+      .hook-container {
+        text-align: center;
+        max-width: 1300px;
+      }
+      .hook-badge {
+        display: inline-block;
+        padding: 10px 24px;
+        background: rgba(78, 161, 87, 0.15);
+        border: 1px solid rgba(78, 161, 87, 0.4);
+        border-radius: 999px;
+        color: var(--primary);
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 32px;
+      }
+      .hook-title {
+        font-size: 80px;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        margin-bottom: 24px;
+      }
+      .hook-highlight {
+        color: var(--primary);
+      }
+      .hook-subtitle {
+        font-size: 32px;
+        color: var(--ink-muted);
+        font-weight: 400;
+        max-width: 900px;
+        margin: 0 auto;
+        line-height: 1.4;
+      }
+
+      /* Scene 2 & 3: Two Column Layout */
+      .split-layout {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 1600px;
+        height: 900px;
+        gap: 80px;
+      }
+      .phone-mockup {
+        width: 480px;
+        height: 840px;
+        background: #141A16;
+        border: 10px solid #232C25;
+        border-radius: 48px;
+        overflow: hidden;
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), 0 0 50px rgba(78, 161, 87, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      .phone-mockup img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .content-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .scene-tag {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+      .scene-title {
+        font-size: 60px;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        margin-bottom: 24px;
+      }
+      .scene-desc {
+        font-size: 26px;
+        color: var(--ink-muted);
+        line-height: 1.5;
+        margin-bottom: 36px;
+      }
+
+      /* NLP Tokens Simulation */
+      .nlp-demo-box {
+        background: var(--surface);
+        border: 1px solid var(--surface-border);
+        border-radius: 20px;
+        padding: 32px;
+        backdrop-filter: blur(12px);
+      }
+      .nlp-input-field {
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(78, 161, 87, 0.3);
+        border-radius: 12px;
+        padding: 18px 24px;
+        font-size: 28px;
+        font-family: monospace;
+        color: #FFFFFF;
+        margin-bottom: 24px;
+      }
+      .nlp-tokens-row {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .nlp-token {
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 19px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .tok-qty { background: rgba(78, 161, 87, 0.25); color: #6ED67A; border: 1px solid rgba(78, 161, 87, 0.5); }
+      .tok-unit { background: rgba(229, 149, 62, 0.25); color: #F5B265; border: 1px solid rgba(229, 149, 62, 0.5); }
+      .tok-price { background: rgba(66, 133, 244, 0.25); color: #82B1FF; border: 1px solid rgba(66, 133, 244, 0.5); }
+      .tok-cat { background: rgba(171, 71, 188, 0.25); color: #CE93D8; border: 1px solid rgba(171, 71, 188, 0.5); }
+
+      /* Feature Cards Grid (Scene 3 & 4) */
+      .feature-card-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .feat-card {
+        background: var(--surface);
+        border: 1px solid var(--surface-border);
+        border-radius: 20px;
+        padding: 28px;
+        backdrop-filter: blur(12px);
+      }
+      .feat-card h4 {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .feat-card p {
+        font-size: 19px;
+        color: var(--ink-muted);
+        line-height: 1.4;
+      }
+
+      /* Scene 4: Stats Grid */
+      .stats-header {
+        text-align: center;
+        margin-bottom: 50px;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 32px;
+        max-width: 1500px;
+      }
+      .stat-box {
+        background: var(--surface);
+        border: 1px solid var(--surface-border);
+        border-radius: 24px;
+        padding: 44px 32px;
+        text-align: center;
+        backdrop-filter: blur(16px);
+      }
+      .stat-val {
+        font-size: 64px;
+        font-weight: 800;
+        color: var(--primary);
+        line-height: 1;
+        margin-bottom: 14px;
+      }
+      .stat-lbl {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 8px;
+      }
+      .stat-sub {
+        font-size: 16px;
+        color: var(--ink-muted);
+      }
+
+      /* Scene 5: Outro */
+      .outro-container {
+        text-align: center;
+      }
+      .outro-logo {
+        width: 140px;
+        height: 140px;
+        margin-bottom: 24px;
+        filter: drop-shadow(0 0 30px rgba(78, 161, 87, 0.4));
+      }
+      .outro-title {
+        font-size: 96px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        margin-bottom: 12px;
+      }
+      .outro-tagline {
+        font-size: 34px;
+        color: var(--primary);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 28px;
+      }
+      .outro-punchline {
+        font-size: 30px;
+        color: var(--ink-muted);
+        max-width: 800px;
+        margin: 0 auto 40px auto;
+        line-height: 1.4;
+      }
+      .outro-badges {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+      }
+      .o-badge {
+        padding: 12px 24px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 999px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="20"
+      data-width="1920"
+      data-height="1080"
+    >
+      <audio id="bgm" src="assets/music.mp3" data-start="0" data-duration="20" data-track-index="99"></audio>
+      <div class="ambient-glow" id="glow"></div>
+
+      <!-- SCENE 1: THE HOOK (0s - 3.5s) -->
+      <div class="scene" id="scene1" data-start="0" data-duration="3.5" data-track-index="0">
+        <div class="hook-container">
+          <div class="hook-badge" id="s1-badge">Native Android · Offline-First</div>
+          <h1 class="hook-title" id="s1-title">You don't need cloud servers<br /><span class="hook-highlight">to buy bananas.</span></h1>
+          <p class="hook-subtitle" id="s1-sub">Why is every grocery app bloated, slow, and tracking you? Meet Oikos.</p>
+        </div>
+      </div>
+
+      <!-- SCENE 2: NLP SMART ENTRY (3.5s - 7.5s) -->
+      <div class="scene" id="scene2" data-start="3.5" data-duration="4.0" data-track-index="1">
+        <div class="split-layout">
+          <div class="phone-mockup" id="s2-phone">
+            <img src="assets/oikos_main_screen.png" alt="Oikos Main Screen" />
+          </div>
+          <div class="content-col">
+            <div class="scene-tag" id="s2-tag">On-Device Intelligence</div>
+            <h2 class="scene-title" id="s2-title">Natural Language Entry.<br />Instant Tokenization.</h2>
+            <p class="scene-desc" id="s2-desc">Type naturally in one box. SmartAddParser extracts quantities, units, prices, and 11 supermarket aisles in sub-millisecond local speed.</p>
+            <div class="nlp-demo-box" id="s2-box">
+              <div class="nlp-input-field" id="s2-input">2L whole milk @ 60</div>
+              <div class="nlp-tokens-row" id="s2-tokens">
+                <div class="nlp-token tok-qty" id="tok-1">🥛 2</div>
+                <div class="nlp-token tok-unit" id="tok-2">📏 Litres</div>
+                <div class="nlp-token tok-price" id="tok-3">💰 ₹60</div>
+                <div class="nlp-token tok-cat" id="tok-4">🥬 Dairy & Eggs</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 3: STORE WALKING ORDER & SHOPPING MODE (7.5s - 12.0s) -->
+      <div class="scene" id="scene3" data-start="7.5" data-duration="4.5" data-track-index="2">
+        <div class="split-layout">
+          <div class="phone-mockup" id="s3-phone">
+            <img src="assets/oikos_shopping_mode.png" alt="Oikos Shopping Mode" />
+          </div>
+          <div class="content-col">
+            <div class="scene-tag" id="s3-tag">In-Store Engineering</div>
+            <h2 class="scene-title" id="s3-title">Never Backtrack<br />Across Aisles.</h2>
+            <p class="scene-desc" id="s3-desc">Engineered for one-handed cart pushing with screen wake-lock, aisle-sequenced walking order, and live cart spend tracking.</p>
+            <div class="feature-card-grid" id="s3-cards">
+              <div class="feat-card" id="c1">
+                <h4>🚶 Store Walking Order</h4>
+                <p>Items automatically sort according to your physical supermarket aisles.</p>
+              </div>
+              <div class="feat-card" id="c2">
+                <h4>📱 Screen Wake-Lock</h4>
+                <p>Keeps display alive while pushing your cart with zero timeout.</p>
+              </div>
+              <div class="feat-card" id="c3">
+                <h4>⚡ Quick Settings Tile</h4>
+                <p>Launch straight into shopping mode from the Android notification shade.</p>
+              </div>
+              <div class="feat-card" id="c4">
+                <h4>💳 Live Cart Budget</h4>
+                <p>Real-time running spend counter as you check items into your cart.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 4: PRIVACY & BENCHMARKS (12.0s - 16.0s) -->
+      <div class="scene" id="scene4" data-start="12.0" data-duration="4.0" data-track-index="3">
+        <div style="text-align: center;">
+          <div class="stats-header">
+            <div class="scene-tag" id="s4-tag">God-Tier Craftsmanship</div>
+            <h2 class="scene-title" id="s4-title">Zero Bloat. Zero Cloud Lag. Zero Trackers.</h2>
+          </div>
+          <div class="stats-grid" id="s4-grid">
+            <div class="stat-box" id="sb1">
+              <div class="stat-val">0.0 ms</div>
+              <div class="stat-lbl">Cloud Latency</div>
+              <div class="stat-sub">100% Offline SQLite</div>
+            </div>
+            <div class="stat-box" id="sb2">
+              <div class="stat-val">0</div>
+              <div class="stat-lbl">Network Permissions</div>
+              <div class="stat-sub">Zero Analytics Trackers</div>
+            </div>
+            <div class="stat-box" id="sb3">
+              <div class="stat-val">4</div>
+              <div class="stat-lbl">Haptic Waveforms</div>
+              <div class="stat-sub">Tick, Confirm & Milestone</div>
+            </div>
+            <div class="stat-box" id="sb4">
+              <div class="stat-val">&lt; 50ms</div>
+              <div class="stat-lbl">Cold Start Launch</div>
+              <div class="stat-sub">R8 / ProGuard Minified</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 5: OUTRO & PUNCHLINE (16.0s - 20.0s) -->
+      <div class="scene" id="scene5" data-start="16.0" data-duration="4.0" data-track-index="4">
+        <div class="outro-container">
+          <img src="assets/Logo.png" alt="Oikos Logo" class="outro-logo" id="s5-logo" />
+          <h1 class="outro-title" id="s5-title">Oikos</h1>
+          <div class="outro-tagline" id="s5-tag">Native Android Grocery App</div>
+          <p class="outro-punchline" id="s5-punch">
+            Zero accounts. Zero cloud latency. Zero trackers.<br />
+            <strong>Just grocery shopping, perfected.</strong>
+          </p>
+          <div class="outro-badges" id="s5-badges">
+            <span class="o-badge">Jetpack Compose</span>
+            <span class="o-badge">Material 3</span>
+            <span class="o-badge">SQLite Local-First</span>
+            <span class="o-badge">100% Offline</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Scene 1: Hook (0s - 3.5s)
+      tl.set("#scene1", { opacity: 1, pointerEvents: "auto" }, 0);
+      tl.fromTo("#s1-badge", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 0.2);
+      tl.fromTo("#s1-title", { opacity: 0, y: 30, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" }, 0.5);
+      tl.fromTo("#s1-sub", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 1.0);
+      tl.to("#scene1", { opacity: 0, scale: 0.96, duration: 0.4, ease: "power2.in" }, 3.1);
+
+      // Scene 2: NLP (3.5s - 7.5s)
+      tl.set("#scene2", { opacity: 1, pointerEvents: "auto" }, 3.5);
+      tl.fromTo("#s2-phone", { opacity: 0, x: -60, scale: 0.92 }, { opacity: 1, x: 0, scale: 1, duration: 0.8, ease: "power3.out" }, 3.5);
+      tl.fromTo("#s2-tag", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 3.7);
+      tl.fromTo("#s2-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 3.9);
+      tl.fromTo("#s2-desc", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 4.1);
+      tl.fromTo("#s2-box", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 4.3);
+      tl.fromTo(["#tok-1", "#tok-2", "#tok-3", "#tok-4"], { opacity: 0, scale: 0.7, y: 15 }, { opacity: 1, scale: 1, y: 0, stagger: 0.15, duration: 0.5, ease: "back.out(1.7)" }, 4.8);
+      tl.to("#scene2", { opacity: 0, x: -40, duration: 0.4, ease: "power2.in" }, 7.1);
+
+      // Scene 3: Shopping Mode & Walking Order (7.5s - 12.0s)
+      tl.set("#scene3", { opacity: 1, pointerEvents: "auto" }, 7.5);
+      tl.fromTo("#s3-phone", { opacity: 0, x: 60, scale: 0.92 }, { opacity: 1, x: 0, scale: 1, duration: 0.8, ease: "power3.out" }, 7.5);
+      tl.fromTo("#s3-tag", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 7.7);
+      tl.fromTo("#s3-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 7.9);
+      tl.fromTo("#s3-desc", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 8.1);
+      tl.fromTo(["#c1", "#c2", "#c3", "#c4"], { opacity: 0, y: 20, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, stagger: 0.15, duration: 0.5, ease: "power2.out" }, 8.4);
+      tl.to("#scene3", { opacity: 0, scale: 0.95, duration: 0.4, ease: "power2.in" }, 11.6);
+
+      // Scene 4: Stats & Privacy (12.0s - 16.0s)
+      tl.set("#scene4", { opacity: 1, pointerEvents: "auto" }, 12.0);
+      tl.fromTo("#s4-tag", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 12.1);
+      tl.fromTo("#s4-title", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 12.3);
+      tl.fromTo(["#sb1", "#sb2", "#sb3", "#sb4"], { opacity: 0, y: 40, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, stagger: 0.15, duration: 0.6, ease: "back.out(1.5)" }, 12.6);
+      tl.to("#scene4", { opacity: 0, scale: 0.95, duration: 0.4, ease: "power2.in" }, 15.6);
+
+      // Scene 5: Outro & Punchline (16.0s - 20.0s)
+      tl.set("#scene5", { opacity: 1, pointerEvents: "auto" }, 16.0);
+      tl.fromTo("#s5-logo", { opacity: 0, scale: 0.6, rotation: -10 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.8, ease: "back.out(1.8)" }, 16.1);
+      tl.fromTo("#s5-title", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 16.5);
+      tl.fromTo("#s5-tag", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 16.8);
+      tl.fromTo("#s5-punch", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, 17.1);
+      tl.fromTo("#s5-badges", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 17.5);
+      tl.to("#glow", { scale: 1.5, opacity: 0.4, duration: 2.0, ease: "power2.inOut" }, 16.0);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

@@ -19,6 +19,20 @@
 
 ---
 
+## 🎬 20-Second Launch Video
+
+<p align="center">
+  <video src="brag-output/brag.mp4" controls width="100%"></video>
+  <br/>
+  <a href="brag-output/brag.mp4">
+    <img src="brag-output/brag.jpg" alt="Oikos 20-Second Launch Video Poster" width="100%" />
+  </a>
+  <br/>
+  <b>▶️ <a href="brag-output/brag.mp4">Watch the 20-Second Launch Video (1080p MP4 · 3.9 MB)</a></b>
+</p>
+
+---
+
 ## 💡 The Philosophy: *"Why is every grocery app not this good?"*
 
 Most modern grocery and checklist apps are bloated, 150MB+ hybrid WebViews requiring cloud accounts, password resets, and endless sync spinners just to remember a carton of milk. When you walk into a concrete supermarket basement with zero mobile signal, they freeze, crash, or lose your edits.

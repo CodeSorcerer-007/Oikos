@@ -1,0 +1,1 @@
+Built Oikos: a 100% offline-first native Android grocery app with on-device NLP parsing, supermarket aisle walking order, and zero network permissions. Because you don't need cloud servers to buy bananas.
