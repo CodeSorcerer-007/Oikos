@@ -353,6 +353,20 @@ class OikosDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         insertItemDirect(db, item)
     }
 
+    fun insertItems(items: List<GroceryItem>) {
+        if (items.isEmpty()) return
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            for (item in items) {
+                insertItemDirect(db, item)
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+    }
+
     fun updateItem(item: GroceryItem) {
         val db = writableDatabase
         val cv = ContentValues().apply {

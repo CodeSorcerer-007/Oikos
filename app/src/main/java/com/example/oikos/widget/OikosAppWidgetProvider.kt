@@ -51,10 +51,15 @@ class OikosAppWidgetProvider : AppWidgetProvider() {
             val allItems = dbHelper.getItemsForList(listId)
             val pendingItems = allItems.filter { !it.isCompleted }
 
-            views.setTextViewText(R.id.widget_list_title, listTitle)
+            val totalCount = allItems.size
+            val completedCount = allItems.count { it.isCompleted }
+            val progressPercent = if (totalCount > 0) ((completedCount * 100) / totalCount) else 0
+
+            views.setProgressBar(R.id.widget_progress_bar, 100, progressPercent, false)
+            views.setTextViewText(R.id.widget_list_title, "$listTitle · $completedCount/$totalCount")
             views.setTextViewText(
                 R.id.widget_count_badge,
-                if (pendingItems.isEmpty()) "Done" else "${pendingItems.size} left"
+                if (pendingItems.isEmpty()) "All Done ✓" else "${pendingItems.size} left"
             )
 
             if (pendingItems.isEmpty()) {
@@ -62,6 +67,8 @@ class OikosAppWidgetProvider : AppWidgetProvider() {
                 views.setViewVisibility(R.id.widget_item_1, View.GONE)
                 views.setViewVisibility(R.id.widget_item_2, View.GONE)
                 views.setViewVisibility(R.id.widget_item_3, View.GONE)
+                views.setViewVisibility(R.id.widget_item_4, View.GONE)
+                views.setViewVisibility(R.id.widget_item_5, View.GONE)
             } else {
                 views.setViewVisibility(R.id.widget_empty_text, View.GONE)
 
@@ -90,13 +97,35 @@ class OikosAppWidgetProvider : AppWidgetProvider() {
                 // Item 3
                 if (pendingItems.size > 2) {
                     views.setViewVisibility(R.id.widget_item_3, View.VISIBLE)
-                    val extra = if (pendingItems.size > 3) " (+${pendingItems.size - 3} more)" else ""
                     views.setTextViewText(
                         R.id.widget_item_3,
-                        "• ${pendingItems[2].name} (${pendingItems[2].formattedQuantity})$extra"
+                        "• ${pendingItems[2].name} (${pendingItems[2].formattedQuantity})"
                     )
                 } else {
                     views.setViewVisibility(R.id.widget_item_3, View.GONE)
+                }
+
+                // Item 4
+                if (pendingItems.size > 3) {
+                    views.setViewVisibility(R.id.widget_item_4, View.VISIBLE)
+                    views.setTextViewText(
+                        R.id.widget_item_4,
+                        "• ${pendingItems[3].name} (${pendingItems[3].formattedQuantity})"
+                    )
+                } else {
+                    views.setViewVisibility(R.id.widget_item_4, View.GONE)
+                }
+
+                // Item 5
+                if (pendingItems.size > 4) {
+                    views.setViewVisibility(R.id.widget_item_5, View.VISIBLE)
+                    val extra = if (pendingItems.size > 5) " (+${pendingItems.size - 5} more)" else ""
+                    views.setTextViewText(
+                        R.id.widget_item_5,
+                        "• ${pendingItems[4].name} (${pendingItems[4].formattedQuantity})$extra"
+                    )
+                } else {
+                    views.setViewVisibility(R.id.widget_item_5, View.GONE)
                 }
             }
 

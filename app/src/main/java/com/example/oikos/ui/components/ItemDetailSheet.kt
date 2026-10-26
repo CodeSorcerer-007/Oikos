@@ -237,10 +237,10 @@ fun ItemDetailSheet(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
-                            .background(if (isSelected) cat.tagBgColor else OikosSurfaceBorder.copy(alpha = 0.35f))
+                            .background(if (isSelected) cat.getAdaptiveTagBgColor() else OikosSurfaceBorder.copy(alpha = 0.35f))
                             .border(
                                 width = if (isSelected) 1.5.dp else 1.dp,
-                                color = if (isSelected) cat.tagTextColor else Color.Transparent,
+                                color = if (isSelected) cat.getAdaptiveTagTextColor() else Color.Transparent,
                                 shape = RoundedCornerShape(10.dp)
                             )
                             .clickable { selectedCategory = cat }
@@ -250,7 +250,7 @@ fun ItemDetailSheet(
                             text = cat.displayName,
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) cat.tagTextColor else OikosTextSecondary
+                                color = if (isSelected) cat.getAdaptiveTagTextColor() else OikosTextSecondary
                             )
                         )
                     }

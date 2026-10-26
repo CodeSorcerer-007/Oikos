@@ -146,13 +146,13 @@ fun StoreOrderSheet(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(category.tagBgColor)
+                                    .background(category.getAdaptiveTagBgColor())
                                     .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
                                 Text(
                                     text = category.displayName,
                                     style = MaterialTheme.typography.labelMedium.copy(
-                                        color = category.tagTextColor,
+                                        color = category.getAdaptiveTagTextColor(),
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 )

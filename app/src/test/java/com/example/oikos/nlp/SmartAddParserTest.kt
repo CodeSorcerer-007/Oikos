@@ -3,6 +3,7 @@ package com.example.oikos.nlp
 import com.example.oikos.model.GroceryCategory
 import com.example.oikos.model.GroceryItem
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -146,4 +147,75 @@ class SmartAddParserTest {
         assertTrue(suggestions.isNotEmpty())
         assertTrue(suggestions.any { it.name.contains("Milk", ignoreCase = true) })
     }
+
+    @Test
+    fun isBatchInput_detectsDelimiters() {
+        assertTrue(SmartAddParser.isBatchInput("milk, eggs, bread"))
+        assertTrue(SmartAddParser.isBatchInput("milk; eggs; bread"))
+        assertTrue(SmartAddParser.isBatchInput("milk\neggs\nbread"))
+        assertFalse(SmartAddParser.isBatchInput("2L whole milk"))
+        assertFalse(SmartAddParser.isBatchInput("6 eggs"))
+    }
+
+    @Test
+    fun parseBatch_commaSeparatedList_parsesAllItemsCorrectly() {
+        val input = "2L milk, 6 organic eggs, 1/2 kg tomatoes, sourdough @ 120"
+        val batch = SmartAddParser.parseBatch(input)
+        assertEquals(4, batch.size)
+
+        assertEquals("Milk", batch[0].name)
+        assertEquals(2.0, batch[0].quantity, 0.001)
+        assertEquals("L", batch[0].unit)
+        assertEquals(GroceryCategory.DAIRY, batch[0].category)
+
+        assertEquals("Organic Eggs", batch[1].name)
+        assertEquals(6.0, batch[1].quantity, 0.001)
+        assertEquals("pcs", batch[1].unit)
+        assertEquals(GroceryCategory.DAIRY, batch[1].category)
+
+        assertEquals("Tomatoes", batch[2].name)
+        assertEquals(0.5, batch[2].quantity, 0.001)
+        assertEquals("kg", batch[2].unit)
+        assertEquals(GroceryCategory.PRODUCE, batch[2].category)
+
+        assertEquals("Sourdough", batch[3].name)
+        assertEquals(1.0, batch[3].quantity, 0.001)
+        assertEquals("loaf", batch[3].unit)
+        assertEquals(120.0, batch[3].estimatedPrice ?: 0.0, 0.001)
+        assertEquals(GroceryCategory.BAKERY, batch[3].category)
+    }
+
+    @Test
+    fun parseBatch_newlineSeparated_handlesPastedLists() {
+        val pasted = """
+            2 apples
+            1 bunch spinach
+            butter
+        """.trimIndent()
+        val batch = SmartAddParser.parseBatch(pasted)
+        assertEquals(3, batch.size)
+        assertEquals("Apples", batch[0].name)
+        assertEquals("Spinach", batch[1].name)
+        assertEquals("Butter", batch[2].name)
+    }
+
+    @Test
+    fun parse_extendedUnits_normalizesCorrectly() {
+        val res1 = SmartAddParser.parse("2 tbsp olive oil")
+        assertEquals(2.0, res1.quantity, 0.001)
+        assertEquals("tbsp", res1.unit)
+
+        val res2 = SmartAddParser.parse("8 oz cheddar cheese")
+        assertEquals(8.0, res2.quantity, 0.001)
+        assertEquals("oz", res2.unit)
+
+        val res3 = SmartAddParser.parse("3 cloves garlic")
+        assertEquals(3.0, res3.quantity, 0.001)
+        assertEquals("clove", res3.unit)
+
+        val res4 = SmartAddParser.parse("1 stalk celery")
+        assertEquals(1.0, res4.quantity, 0.001)
+        assertEquals("stalk", res4.unit)
+    }
 }
+

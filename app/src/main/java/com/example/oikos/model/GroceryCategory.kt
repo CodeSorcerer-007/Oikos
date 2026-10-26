@@ -102,6 +102,31 @@ enum class GroceryCategory(
     val tagBgColor: Color get() = Color(tagBgColorHex)
     val tagTextColor: Color get() = Color(tagTextColorHex)
 
+    val tagDarkBgColor: Color get() = Color(tagBgColorHex).copy(alpha = 0.22f)
+    val tagDarkTextColor: Color get() = when (this) {
+        PRODUCE -> Color(0xFF81C784)
+        BAKERY -> Color(0xFFFFB74D)
+        DAIRY -> Color(0xFF64B5F6)
+        MEAT -> Color(0xFFE57373)
+        PANTRY -> Color(0xFFD7CCC8)
+        BEVERAGES -> Color(0xFF4DD0E1)
+        SNACKS -> Color(0xFFFFD54F)
+        FROZEN -> Color(0xFFBA68C8)
+        HOUSEHOLD -> Color(0xFF90A4AE)
+        PERSONAL_CARE -> Color(0xFFF06292)
+        OTHER -> Color(0xFFB0BEC5)
+    }
+
+    @androidx.compose.runtime.Composable
+    fun getAdaptiveTagBgColor(): Color {
+        return if (com.example.oikos.theme.LocalOikosColors.current.isDark) tagDarkBgColor else tagBgColor
+    }
+
+    @androidx.compose.runtime.Composable
+    fun getAdaptiveTagTextColor(): Color {
+        return if (com.example.oikos.theme.LocalOikosColors.current.isDark) tagDarkTextColor else tagTextColor
+    }
+
     companion object {
         fun fromId(id: String?): GroceryCategory {
             return entries.firstOrNull { it.id.equals(id, ignoreCase = true) } ?: OTHER

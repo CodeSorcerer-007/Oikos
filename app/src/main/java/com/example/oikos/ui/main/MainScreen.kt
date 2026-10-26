@@ -24,8 +24,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
@@ -91,6 +95,8 @@ fun MainScreen(
     val currencySymbol by viewModel.currencySymbol.collectAsStateWithLifecycle()
     val hapticsEnabled by viewModel.hapticsEnabled.collectAsStateWithLifecycle()
     val keepScreenAwake by viewModel.keepScreenAwake.collectAsStateWithLifecycle()
+    val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    val smartRestockSuggestions by viewModel.smartRestockSuggestions.collectAsStateWithLifecycle()
     val canUndo by viewModel.canUndo.collectAsStateWithLifecycle()
     val activeModal by viewModel.activeModal.collectAsStateWithLifecycle()
     val collapsedCategories by viewModel.collapsedCategories.collectAsStateWithLifecycle()
@@ -224,10 +230,80 @@ fun MainScreen(
                     frequentItems = frequentItems,
                     currencySymbol = currencySymbol,
                     onAddItem = { viewModel.addItem(it) },
+                    onAddItems = { viewModel.addItems(it) },
                     onIncrementExistingItem = { viewModel.incrementItemQuantity(it) },
                     onHapticTick = { viewModel.hapticHelper.tick() }
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            // Personal Grocery Intelligence: Smart Restock Suggestions
+            if (smartRestockSuggestions.isNotEmpty()) {
+                item(key = "smart_restock_section") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AutoAwesome,
+                                contentDescription = null,
+                                tint = OikosWarmHoney,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Smart Restock Suggestions",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = OikosTextSecondary,
+                                    letterSpacing = 0.4.sp
+                                )
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            smartRestockSuggestions.forEach { frequent ->
+                                Surface(
+                                    onClick = { viewModel.restockItem(frequent) },
+                                    shape = RoundedCornerShape(20.dp),
+                                    color = OikosSurface,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, OikosForestGreen.copy(alpha = 0.35f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = null,
+                                            tint = OikosForestGreen,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "${frequent.name} (${if (frequent.defaultQuantity % 1.0 == 0.0) frequent.defaultQuantity.toInt().toString() else frequent.defaultQuantity.toString()} ${frequent.defaultUnit})",
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = OikosTextPrimary
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
             }
 
             // Empty State
@@ -350,9 +426,11 @@ fun MainScreen(
         is ActiveModal.Settings -> {
             SettingsSheet(
                 currencySymbol = currencySymbol,
+                themeMode = themeMode,
                 hapticsEnabled = hapticsEnabled,
                 keepScreenAwake = keepScreenAwake,
                 onSetCurrency = { viewModel.setCurrency(it) },
+                onSetThemeMode = { viewModel.setThemeMode(it) },
                 onSetHaptics = { viewModel.setHaptics(it) },
                 onSetKeepScreenAwake = { viewModel.setKeepScreenAwake(it) },
                 onExportBackup = { viewModel.exportBackup() },

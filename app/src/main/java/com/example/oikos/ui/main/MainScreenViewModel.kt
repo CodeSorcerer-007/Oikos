@@ -40,11 +40,20 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
     val currencySymbol: StateFlow<String> = repository.currencySymbol
     val hapticsEnabled: StateFlow<Boolean> = repository.hapticsEnabled
     val keepScreenAwake: StateFlow<Boolean> = repository.keepScreenAwake
+    val themeMode: StateFlow<String> = repository.themeMode
     val canUndo: StateFlow<Boolean> = repository.canUndo
 
     val currentList: StateFlow<GroceryList?> = combine(lists, activeListId) { allLists, id ->
         allLists.firstOrNull { it.id == id } ?: allLists.firstOrNull()
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    // Personal Grocery Intelligence: Items frequently bought that are not currently in the cart
+    val smartRestockSuggestions: StateFlow<List<FrequentItem>> = combine(items, frequentItems) { currentItems, frequent ->
+        val activeNames = currentItems.map { it.name.trim().lowercase() }.toSet()
+        frequent.filter { it.name.trim().lowercase() !in activeNames }
+            .sortedByDescending { it.buyCount }
+            .take(6)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _activeModal = MutableStateFlow<ActiveModal>(ActiveModal.None)
     val activeModal: StateFlow<ActiveModal> = _activeModal.asStateFlow()
@@ -71,6 +80,15 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             val listId = activeListId.value
             repository.addItem(item.copy(listId = listId))
+        }
+    }
+
+    fun addItems(items: List<GroceryItem>) {
+        if (items.isEmpty()) return
+        viewModelScope.launch {
+            hapticHelper.confirm()
+            repository.addItems(items)
+            _snackbarMessage.value = "Added ${items.size} items to list"
         }
     }
 
@@ -171,6 +189,23 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
 
     fun setKeepScreenAwake(awake: Boolean) {
         repository.setKeepScreenAwake(awake)
+    }
+
+    fun setThemeMode(mode: String) {
+        repository.setThemeMode(mode)
+    }
+
+    fun restockItem(frequent: FrequentItem) {
+        hapticHelper.confirm()
+        addItem(
+            GroceryItem(
+                name = frequent.name,
+                quantity = frequent.defaultQuantity,
+                unit = frequent.defaultUnit,
+                category = frequent.category
+            )
+        )
+        _snackbarMessage.value = "Added ${frequent.name} to list"
     }
 
     suspend fun exportBackup(): String {

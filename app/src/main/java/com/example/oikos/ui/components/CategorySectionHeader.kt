@@ -55,14 +55,14 @@ fun CategorySectionHeader(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(6.dp))
-                .background(category.tagBgColor)
+                .background(category.getAdaptiveTagBgColor())
                 .padding(horizontal = 8.dp, vertical = 3.dp)
         ) {
             Text(
                 text = category.displayName.uppercase(),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = category.tagTextColor,
+                    color = category.getAdaptiveTagTextColor(),
                     letterSpacing = 0.8.sp
                 )
             )

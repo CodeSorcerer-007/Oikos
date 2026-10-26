@@ -25,14 +25,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.outlined.Celebration
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ShoppingBag
@@ -52,12 +56,16 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -69,6 +77,7 @@ import com.example.oikos.model.GroceryCategory
 import com.example.oikos.model.GroceryItem
 import com.example.oikos.model.GroceryList
 import com.example.oikos.theme.OikosBackground
+import com.example.oikos.theme.OikosError
 import com.example.oikos.theme.OikosForestGreen
 import com.example.oikos.theme.OikosForestGreenContainer
 import com.example.oikos.theme.OikosForestGreenDark
@@ -109,6 +118,11 @@ fun ShoppingModeScreen(
     }
 
     var showFinishModal by remember { mutableStateOf(false) }
+    var lastToggledItemId by remember { mutableStateOf<String?>(null) }
+    var lastToggledItemName by remember { mutableStateOf<String?>(null) }
+
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     val totalCount = items.size
     val completedCount = items.count { it.isCompleted }
@@ -209,7 +223,7 @@ fun ShoppingModeScreen(
                 }
             }
 
-            // Progress Banner
+            // Progress & Budget Banner
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = OikosSurfaceBorder.copy(alpha = 0.25f)
@@ -244,11 +258,77 @@ fun ShoppingModeScreen(
                         color = OikosForestGreen,
                         trackColor = OikosSurfaceBorder
                     )
+
+                    // Budget Gauge if list has a defined budget
+                    if (currentList.budget != null) {
+                        val budget = currentList.budget
+                        val remainingBudget = budget - checkedTotal
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Budget: ${CurrencyFormatter.format(budget, currencySymbol)}",
+                                style = MaterialTheme.typography.bodySmall.copy(color = OikosTextSecondary)
+                            )
+                            Text(
+                                text = if (remainingBudget >= 0) "${CurrencyFormatter.format(remainingBudget, currencySymbol)} remaining" else "Over budget by ${CurrencyFormatter.format(-remainingBudget, currencySymbol)}",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (remainingBudget >= 0) OikosForestGreen else OikosError
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Aisle Quick-Jump Bar
+            if (groupedItemsByStoreOrder.size > 1) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = OikosSurface,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, OikosSurfaceBorder.copy(alpha = 0.5f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        groupedItemsByStoreOrder.forEachIndexed { index, (category, catItems) ->
+                            val pendingInCat = catItems.count { !it.isCompleted }
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (pendingInCat == 0) OikosSurfaceBorder.copy(alpha = 0.5f) else category.getAdaptiveTagBgColor(),
+                                modifier = Modifier.clickable {
+                                    val targetIndex = groupedItemsByStoreOrder.take(index).sumOf { 1 + it.second.size }
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(targetIndex)
+                                    }
+                                }
+                            ) {
+                                Text(
+                                    text = "${category.displayName} ${if (pendingInCat == 0) "✓" else "($pendingInCat)"}",
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (pendingInCat == 0) OikosTextTertiary else category.getAdaptiveTagTextColor()
+                                    )
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
             // Main List Ordered by Store Layout
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -266,14 +346,14 @@ fun ShoppingModeScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(category.tagBgColor)
+                                    .background(category.getAdaptiveTagBgColor())
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
                                 Text(
                                     text = category.displayName.uppercase(),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = category.tagTextColor,
+                                        color = category.getAdaptiveTagTextColor(),
                                         letterSpacing = 0.8.sp
                                     )
                                 )
@@ -304,11 +384,21 @@ fun ShoppingModeScreen(
                                 .padding(vertical = 4.dp)
                                 .scale(itemScale)
                                 .clip(RoundedCornerShape(16.dp))
+                                .semantics {
+                                    contentDescription = "${item.name}, ${item.formattedQuantity}, aisle ${item.category.displayName}, ${if (item.isCompleted) "Checked" else "Not checked"}"
+                                }
                                 .clickable {
                                     onHapticConfirm()
+                                    val wasCompleted = item.isCompleted
                                     onToggleCompletion(item.id)
-                                    if (remainingCount == 1 && !item.isCompleted) {
-                                        onHapticMilestone()
+                                    if (!wasCompleted) {
+                                        lastToggledItemId = item.id
+                                        lastToggledItemName = item.name
+                                        if (remainingCount == 1) {
+                                            onHapticMilestone()
+                                        }
+                                    } else if (lastToggledItemId == item.id) {
+                                        lastToggledItemId = null
                                     }
                                 },
                             shape = RoundedCornerShape(16.dp),
@@ -390,6 +480,64 @@ fun ShoppingModeScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            // Quick Inline Undo Floating Banner
+            AnimatedVisibility(
+                visible = lastToggledItemId != null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = OikosForestGreen,
+                    contentColor = OikosOnForestGreen,
+                    shadowElevation = 3.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Checked $lastToggledItemName",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                        )
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    lastToggledItemId?.let { id ->
+                                        onToggleCompletion(id)
+                                        onHapticConfirm()
+                                    }
+                                    lastToggledItemId = null
+                                }
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Undo,
+                                contentDescription = "Undo toggle",
+                                tint = OikosWarmHoney,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Undo",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = OikosWarmHoney,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
                         }
                     }
                 }

@@ -65,18 +65,29 @@ fun SmartAddBar(
     onAddItem: (GroceryItem) -> Unit,
     onIncrementExistingItem: (GroceryItem) -> Unit,
     onHapticTick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAddItems: (List<GroceryItem>) -> Unit = { items -> items.forEach(onAddItem) }
 ) {
     var textInput by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
-    val parsedResult by remember(textInput) {
+    val isBatchMode by remember(textInput) {
+        derivedStateOf { SmartAddParser.isBatchInput(textInput) }
+    }
+
+    val parsedBatch by remember(textInput, isBatchMode) {
         derivedStateOf {
-            if (textInput.isNotBlank()) SmartAddParser.parse(textInput) else null
+            if (isBatchMode && textInput.isNotBlank()) SmartAddParser.parseBatch(textInput) else emptyList()
         }
     }
 
-    // Check duplicate item
+    val parsedResult by remember(textInput, isBatchMode) {
+        derivedStateOf {
+            if (!isBatchMode && textInput.isNotBlank()) SmartAddParser.parse(textInput) else null
+        }
+    }
+
+    // Check duplicate item for single input
     val duplicateItem by remember(parsedResult, existingItems) {
         derivedStateOf {
             parsedResult?.let { parsed ->
@@ -87,7 +98,23 @@ fun SmartAddBar(
         }
     }
 
-    fun submitItem() {
+    fun submitItems() {
+        if (parsedBatch.size > 1) {
+            onHapticTick()
+            val itemsToAdd = parsedBatch.map { parsed ->
+                GroceryItem(
+                    name = parsed.name,
+                    quantity = parsed.quantity,
+                    unit = parsed.unit,
+                    category = parsed.category,
+                    estimatedPrice = parsed.estimatedPrice
+                )
+            }
+            onAddItems(itemsToAdd)
+            textInput = ""
+            return
+        }
+
         val parsed = parsedResult ?: return
         if (parsed.name.isBlank()) return
         onHapticTick()
@@ -127,13 +154,13 @@ fun SmartAddBar(
                         modifier = Modifier.weight(1f),
                         placeholder = {
                             Text(
-                                "Add item (e.g. 2L milk, 6 eggs, bread @ 80)...",
+                                "Add item(s) e.g. 2L milk, 6 eggs, bread @ 80...",
                                 style = MaterialTheme.typography.bodyMedium.copy(color = OikosTextTertiary)
                             )
                         },
-                        singleLine = true,
+                        singleLine = !isBatchMode,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { submitItem() }),
+                        keyboardActions = KeyboardActions(onDone = { submitItems() }),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Transparent,
                             unfocusedBorderColor = Color.Transparent,
@@ -162,21 +189,78 @@ fun SmartAddBar(
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(if (textInput.isNotBlank()) OikosForestGreen else OikosSurfaceBorder)
-                            .clickable(enabled = textInput.isNotBlank()) { submitItem() },
+                            .clickable(enabled = textInput.isNotBlank()) { submitItems() },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add Item",
+                            imageVector = if (parsedBatch.size > 1) Icons.Outlined.AutoAwesome else Icons.Default.Add,
+                            contentDescription = if (parsedBatch.size > 1) "Add Batch" else "Add Item",
                             tint = if (textInput.isNotBlank()) OikosOnForestGreen else OikosTextTertiary,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
 
-                // Live Parsed Preview Chips
+                // Batch Mode Preview Chips
                 AnimatedVisibility(
-                    visible = parsedResult != null && parsedResult?.name?.isNotBlank() == true,
+                    visible = parsedBatch.size > 1,
+                    enter = fadeIn() + slideInVertically(),
+                    exit = fadeOut() + slideOutVertically()
+                ) {
+                    Column(modifier = Modifier.padding(top = 8.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AutoAwesome,
+                                contentDescription = null,
+                                tint = OikosWarmHoney,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Batch Detected: ${parsedBatch.size} items · Tap add button to insert all",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = OikosWarmHoney
+                                )
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            parsedBatch.forEach { parsed ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = OikosForestGreenContainer,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, OikosForestGreen.copy(alpha = 0.2f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "${parsed.name} (${if (parsed.quantity % 1.0 == 0.0) parsed.quantity.toInt() else parsed.quantity} ${parsed.unit})",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = OikosForestGreen
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Single Item Parsed Preview Chips
+                AnimatedVisibility(
+                    visible = parsedBatch.size <= 1 && parsedResult != null && parsedResult?.name?.isNotBlank() == true,
                     enter = fadeIn() + slideInVertically(),
                     exit = fadeOut() + slideOutVertically()
                 ) {
@@ -215,13 +299,13 @@ fun SmartAddBar(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(parsed.category.tagBgColor)
+                                        .background(parsed.category.getAdaptiveTagBgColor())
                                         .padding(horizontal = 8.dp, vertical = 2.dp)
                                 ) {
                                     Text(
                                         text = parsed.category.displayName,
                                         style = MaterialTheme.typography.labelMedium.copy(
-                                            color = parsed.category.tagTextColor,
+                                            color = parsed.category.getAdaptiveTagTextColor(),
                                             fontWeight = FontWeight.SemiBold
                                         )
                                     )

@@ -67,13 +67,19 @@ import com.example.oikos.theme.OikosTextSecondary
 import com.example.oikos.theme.OikosTextTertiary
 import kotlinx.coroutines.launch
 
+import androidx.compose.material.icons.outlined.BrightnessAuto
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.LightMode
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsSheet(
     currencySymbol: String,
+    themeMode: String,
     hapticsEnabled: Boolean,
     keepScreenAwake: Boolean,
     onSetCurrency: (String) -> Unit,
+    onSetThemeMode: (String) -> Unit,
     onSetHaptics: (Boolean) -> Unit,
     onSetKeepScreenAwake: (Boolean) -> Unit,
     onExportBackup: suspend () -> String,
@@ -117,6 +123,59 @@ fun SettingsSheet(
                 )
                 IconButton(onClick = onDismiss) {
                     Icon(Icons.Outlined.Close, contentDescription = "Close", tint = OikosTextSecondary)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Appearance & Theme Mode Selector
+            Text(
+                text = "Appearance & Theme",
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold, color = OikosTextPrimary)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val modes = listOf(
+                    Triple("SYSTEM", "System", Icons.Outlined.BrightnessAuto),
+                    Triple("LIGHT", "Light", Icons.Outlined.LightMode),
+                    Triple("DARK", "Dark", Icons.Outlined.DarkMode)
+                )
+                modes.forEach { (modeKey, label, icon) ->
+                    val isSelected = themeMode.equals(modeKey, ignoreCase = true)
+                    Surface(
+                        onClick = { onSetThemeMode(modeKey) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isSelected) OikosForestGreenContainer else OikosSurface,
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (isSelected) OikosForestGreen else OikosSurfaceBorder
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = if (isSelected) OikosForestGreen else OikosTextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) OikosForestGreen else OikosTextPrimary
+                                )
+                            )
+                        }
+                    }
                 }
             }
 

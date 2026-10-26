@@ -55,6 +55,9 @@ class OikosRepository(context: Context) {
     private val _keepScreenAwake = MutableStateFlow(prefs.getBoolean("keep_screen_awake", true))
     val keepScreenAwake: StateFlow<Boolean> = _keepScreenAwake.asStateFlow()
 
+    private val _themeMode = MutableStateFlow(prefs.getString("theme_mode", "SYSTEM") ?: "SYSTEM")
+    val themeMode: StateFlow<String> = _themeMode.asStateFlow()
+
     private val undoStack = Stack<UndoAction>()
     private val _canUndo = MutableStateFlow(false)
     val canUndo: StateFlow<Boolean> = _canUndo.asStateFlow()
@@ -114,6 +117,15 @@ class OikosRepository(context: Context) {
         dbHelper.insertItem(itemToInsert)
         refreshItemsForActiveList()
         itemToInsert
+    }
+
+    suspend fun addItems(items: List<GroceryItem>): List<GroceryItem> = withContext(Dispatchers.IO) {
+        if (items.isEmpty()) return@withContext emptyList()
+        val targetListId = _activeListId.value
+        val itemsToInsert = items.map { it.copy(listId = if (it.listId.isBlank()) targetListId else it.listId) }
+        dbHelper.insertItems(itemsToInsert)
+        refreshItemsForActiveList()
+        itemsToInsert
     }
 
     suspend fun updateItem(item: GroceryItem) = withContext(Dispatchers.IO) {
@@ -243,6 +255,11 @@ class OikosRepository(context: Context) {
     fun setKeepScreenAwake(awake: Boolean) {
         _keepScreenAwake.value = awake
         prefs.edit().putBoolean("keep_screen_awake", awake).apply()
+    }
+
+    fun setThemeMode(mode: String) {
+        _themeMode.value = mode
+        prefs.edit().putString("theme_mode", mode).apply()
     }
 
     // Export JSON Backup

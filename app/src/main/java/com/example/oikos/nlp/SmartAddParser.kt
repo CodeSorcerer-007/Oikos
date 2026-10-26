@@ -204,8 +204,31 @@ object SmartAddParser {
         "bottle", "bottles", "btl",
         "can", "cans", "box", "boxes", "jar", "jars", "tub", "tubs",
         "loaf", "loaves", "head", "heads", "bunch", "bunches", "roll", "rolls",
-        "bar", "bars", "tube", "tubes", "dozen", "dozens"
+        "bar", "bars", "tube", "tubes", "dozen", "dozens",
+        "tbsp", "tablespoon", "tablespoons", "tsp", "teaspoon", "teaspoons",
+        "oz", "ounce", "ounces", "lb", "lbs", "pound", "pounds",
+        "cup", "cups", "clove", "cloves", "stalk", "stalks",
+        "handful", "pinch", "carton", "cartons", "punnet", "punnets"
     )
+
+    fun isBatchInput(rawInput: String): Boolean {
+        val trimmed = rawInput.trim()
+        if (trimmed.length < 3) return false
+        return trimmed.contains(",") || trimmed.contains(";") || trimmed.contains("\n") || trimmed.contains("\r")
+    }
+
+    fun parseBatch(rawInput: String): List<ParsedItemResult> {
+        val trimmed = rawInput.trim()
+        if (trimmed.isBlank()) return emptyList()
+
+        val tokens = trimmed.split(Regex("""[\r\n,;]+"""))
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+
+        if (tokens.isEmpty()) return emptyList()
+
+        return tokens.map { parse(it) }.filter { it.name.isNotBlank() }
+    }
 
     fun parse(rawInput: String): ParsedItemResult {
         var input = rawInput.trim()
@@ -262,18 +285,27 @@ object SmartAddParser {
                         unit = normalizeUnit(potentialUnit)
                         itemName = rest.ifBlank { input }
                     } else if (rest.isNotBlank()) {
-                        // Check if the first word of 'rest' is a unit, e.g. "2 litres milk"
+                        // Check if the first word of 'rest' is a unit, e.g. "2 big bottles water"
                         val words = rest.split(Regex("""\s+"""), limit = 2)
                         val firstWord = words[0].lowercase(Locale.ROOT)
                         if (isRecognizedUnit(firstWord)) {
                             quantity = qtyVal
                             unit = normalizeUnit(firstWord)
-                            itemName = if (words.size > 1) words[1] else rest
+                            val remaining = if (words.size > 1) words[1] else ""
+                            itemName = if (potentialUnit.isNotBlank()) {
+                                "$potentialUnit $remaining".trim()
+                            } else {
+                                remaining.ifBlank { rest }
+                            }
                         } else {
-                            // "6 eggs" -> quantity 6, unit pcs, itemName "eggs"
+                            // "6 organic eggs"
                             quantity = qtyVal
                             unit = "pcs"
-                            itemName = rest
+                            itemName = if (potentialUnit.isNotBlank()) {
+                                "$potentialUnit $rest".trim()
+                            } else {
+                                rest
+                            }
                         }
                     } else if (potentialUnit.isNotBlank()) {
                         // "2 apples" where "apples" is not a unit
@@ -331,6 +363,15 @@ object SmartAddParser {
             "bar", "bars" -> "bar"
             "tube", "tubes" -> "tube"
             "dozen", "dozens" -> "dozen"
+            "tbsp", "tablespoon", "tablespoons" -> "tbsp"
+            "tsp", "teaspoon", "teaspoons" -> "tsp"
+            "oz", "ounce", "ounces" -> "oz"
+            "lb", "lbs", "pound", "pounds" -> "lb"
+            "cup", "cups" -> "cup"
+            "clove", "cloves" -> "clove"
+            "stalk", "stalks" -> "stalk"
+            "carton", "cartons" -> "carton"
+            "punnet", "punnets" -> "punnet"
             else -> unit
         }
     }

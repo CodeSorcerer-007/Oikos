@@ -57,10 +57,23 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <!-- Visual Progress Bar -->
+    <ProgressBar
+        android:id="@+id/widget_progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
+        android:max="100"
+        android:progress="0"
+        android:progressTint="#223E25"
+        android:progressBackgroundTint="#E8E6DF" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginVertical="10dp"
+        android:layout_marginVertical="6dp"
         android:background="#E8E6DF" />
 
     <!-- Pending Items Preview -->
@@ -76,10 +89,10 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:paddingVertical="2dp"
+            android:paddingVertical="1.5dp"
             android:text="• Whole Organic Milk (1 L)"
             android:textColor="#1A1C19"
-            android:textSize="13sp" />
+            android:textSize="12.5sp" />
 
         <TextView
             android:id="@+id/widget_item_2"
@@ -87,10 +100,10 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:paddingVertical="2dp"
+            android:paddingVertical="1.5dp"
             android:text="• Sourdough Bread (1 loaf)"
             android:textColor="#1A1C19"
-            android:textSize="13sp" />
+            android:textSize="12.5sp" />
 
         <TextView
             android:id="@+id/widget_item_3"
@@ -98,10 +111,34 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:paddingVertical="2dp"
+            android:paddingVertical="1.5dp"
             android:text="• Crisp Gala Apples (6 pcs)"
             android:textColor="#1A1C19"
-            android:textSize="13sp" />
+            android:textSize="12.5sp" />
+
+        <TextView
+            android:id="@+id/widget_item_4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:paddingVertical="1.5dp"
+            android:text="• Organic Brown Eggs (12 pcs)"
+            android:textColor="#1A1C19"
+            android:textSize="12.5sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/widget_item_5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:paddingVertical="1.5dp"
+            android:text="• Extra Virgin Olive Oil (1 L)"
+            android:textColor="#1A1C19"
+            android:textSize="12.5sp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/widget_empty_text"
@@ -125,7 +162,7 @@
         <TextView
             android:id="@+id/widget_btn_open"
             android:layout_width="match_parent"
-            android:layout_height="36dp"
+            android:layout_height="34dp"
             android:background="@drawable/widget_btn_bg"
             android:gravity="center"
             android:text="Open Oikos"
