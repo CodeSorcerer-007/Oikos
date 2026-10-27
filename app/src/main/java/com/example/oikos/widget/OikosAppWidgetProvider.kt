@@ -11,6 +11,9 @@ import android.widget.RemoteViews
 import com.example.oikos.MainActivity
 import com.example.oikos.R
 import com.example.oikos.data.db.OikosDatabaseHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class OikosAppWidgetProvider : AppWidgetProvider() {
 
@@ -19,8 +22,15 @@ class OikosAppWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        for (appWidgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId)
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                for (appWidgetId in appWidgetIds) {
+                    updateAppWidget(context, appWidgetManager, appWidgetId)
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
@@ -29,8 +39,10 @@ class OikosAppWidgetProvider : AppWidgetProvider() {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val thisWidget = ComponentName(context, OikosAppWidgetProvider::class.java)
             val allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget)
-            for (widgetId in allWidgetIds) {
-                updateAppWidget(context, appWidgetManager, widgetId)
+            CoroutineScope(Dispatchers.IO).launch {
+                for (widgetId in allWidgetIds) {
+                    updateAppWidget(context, appWidgetManager, widgetId)
+                }
             }
         }
 
@@ -41,8 +53,8 @@ class OikosAppWidgetProvider : AppWidgetProvider() {
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_oikos_glance)
 
-            // Query items from database
-            val dbHelper = OikosDatabaseHelper(context)
+            // Query items from singleton database on background thread
+            val dbHelper = OikosDatabaseHelper.getInstance(context)
             val lists = dbHelper.getAllLists()
             val activeList = lists.firstOrNull { it.isDefault } ?: lists.firstOrNull()
             val listId = activeList?.id ?: "default_weekly"

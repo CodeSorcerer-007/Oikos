@@ -27,7 +27,7 @@ sealed class UndoAction {
 
 class OikosRepository(context: Context) {
 
-    private val dbHelper = OikosDatabaseHelper(context.applicationContext)
+    private val dbHelper = OikosDatabaseHelper.getInstance(context)
     private val prefs: SharedPreferences = context.getSharedPreferences("oikos_preferences", Context.MODE_PRIVATE)
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
@@ -307,8 +307,11 @@ class OikosRepository(context: Context) {
         root.toString(2)
     }
 
-    // Import JSON Backup
+    // Import JSON Backup with atomic transaction & validation
     suspend fun importBackupJson(jsonStr: String): Boolean = withContext(Dispatchers.IO) {
+        if (jsonStr.isBlank() || jsonStr.length > 5_000_000) return@withContext false
+        val db = dbHelper.writableDatabase
+        db.beginTransaction()
         try {
             val root = JSONObject(jsonStr)
             val listsArray = root.getJSONArray("lists")
@@ -348,12 +351,15 @@ class OikosRepository(context: Context) {
                     }
                 }
             }
+            db.setTransactionSuccessful()
             refreshLists()
             refreshItemsForActiveList()
             true
         } catch (e: Exception) {
             e.printStackTrace()
             false
+        } finally {
+            db.endTransaction()
         }
     }
 }

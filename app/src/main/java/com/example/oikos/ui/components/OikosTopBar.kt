@@ -17,9 +17,9 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.LinearScale
-import androidx.compose.material.icons.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -144,7 +144,7 @@ fun OikosTopBar(
                             text = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        imageVector = Icons.Outlined.ListAlt,
+                                        imageVector = Icons.AutoMirrored.Outlined.ListAlt,
                                         contentDescription = null,
                                         tint = OikosForestGreen,
                                         modifier = Modifier.size(18.dp)
@@ -232,7 +232,7 @@ fun OikosTopBar(
                     DropdownMenuItem(
                         text = { Text("Manage Lists") },
                         leadingIcon = {
-                            Icon(Icons.Outlined.ListAlt, contentDescription = null, tint = OikosTextSecondary)
+                            Icon(Icons.AutoMirrored.Outlined.ListAlt, contentDescription = null, tint = OikosTextSecondary)
                         },
                         onClick = {
                             menuExpanded = false

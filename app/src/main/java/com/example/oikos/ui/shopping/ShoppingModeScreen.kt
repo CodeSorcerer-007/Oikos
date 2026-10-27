@@ -117,6 +117,10 @@ fun ShoppingModeScreen(
         }
     }
 
+    androidx.activity.compose.BackHandler {
+        onExitShoppingMode()
+    }
+
     var showFinishModal by remember { mutableStateOf(false) }
     var lastToggledItemId by remember { mutableStateOf<String?>(null) }
     var lastToggledItemName by remember { mutableStateOf<String?>(null) }

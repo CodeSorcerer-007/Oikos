@@ -87,14 +87,20 @@ fun SmartAddBar(
         }
     }
 
-    // Check duplicate item for single input
+    // Check duplicate item for single input via parser helper
     val duplicateItem by remember(parsedResult, existingItems) {
         derivedStateOf {
             parsedResult?.let { parsed ->
-                existingItems.firstOrNull { 
-                    !it.isCompleted && it.name.equals(parsed.name, ignoreCase = true) 
-                }
+                SmartAddParser.findDuplicate(parsed.name, existingItems)
             }
+        }
+    }
+
+    val autocompleteSuggestions by remember(textInput, isBatchMode) {
+        derivedStateOf {
+            if (!isBatchMode && textInput.trim().length >= 2) {
+                SmartAddParser.getSuggestions(textInput.trim(), limit = 4)
+            } else emptyList()
         }
     }
 
@@ -361,6 +367,53 @@ fun SmartAddBar(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Live Autocomplete Suggestions when typing
+        if (textInput.isNotBlank() && autocompleteSuggestions.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Suggested:",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = OikosTextTertiary,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+
+                autocompleteSuggestions.forEach { sug ->
+                    Surface(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                onHapticTick()
+                                textInput = "${sug.name} "
+                            },
+                        shape = RoundedCornerShape(12.dp),
+                        color = OikosSurface,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, OikosForestGreen.copy(alpha = 0.3f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = sug.name,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = OikosForestGreen,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            )
                         }
                     }
                 }

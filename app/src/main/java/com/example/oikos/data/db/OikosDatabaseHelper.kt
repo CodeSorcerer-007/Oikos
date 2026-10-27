@@ -19,6 +19,20 @@ class OikosDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         const val TABLE_ITEMS = "items"
         const val TABLE_FREQUENT_ITEMS = "frequent_items"
         const val TABLE_STORE_ORDER = "store_order"
+
+        @Volatile
+        private var INSTANCE: OikosDatabaseHelper? = null
+
+        fun getInstance(context: Context): OikosDatabaseHelper {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: OikosDatabaseHelper(context.applicationContext).also { INSTANCE = it }
+            }
+        }
+    }
+
+    override fun onConfigure(db: SQLiteDatabase) {
+        super.onConfigure(db)
+        db.setForeignKeyConstraintsEnabled(true)
     }
 
     override fun onCreate(db: SQLiteDatabase) {

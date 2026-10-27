@@ -61,6 +61,17 @@ object SmartAddParser {
         "broccoli" to (GroceryCategory.PRODUCE to "head"),
         "capsicum" to (GroceryCategory.PRODUCE to "pcs"),
         "bell pepper" to (GroceryCategory.PRODUCE to "pcs"),
+        "bell peppers" to (GroceryCategory.PRODUCE to "pcs"),
+        "pepper" to (GroceryCategory.PRODUCE to "pcs"),
+        "peppers" to (GroceryCategory.PRODUCE to "pcs"),
+        "red pepper" to (GroceryCategory.PRODUCE to "pcs"),
+        "red peppers" to (GroceryCategory.PRODUCE to "pcs"),
+        "green pepper" to (GroceryCategory.PRODUCE to "pcs"),
+        "green peppers" to (GroceryCategory.PRODUCE to "pcs"),
+        "chili" to (GroceryCategory.PRODUCE to "g"),
+        "chilies" to (GroceryCategory.PRODUCE to "g"),
+        "chilli" to (GroceryCategory.PRODUCE to "g"),
+        "chillies" to (GroceryCategory.PRODUCE to "g"),
         "mango" to (GroceryCategory.PRODUCE to "kg"),
         "mangoes" to (GroceryCategory.PRODUCE to "kg"),
         "strawberries" to (GroceryCategory.PRODUCE to "box"),
@@ -379,17 +390,36 @@ object SmartAddParser {
     private fun inferCategoryAndUnit(name: String): Pair<GroceryCategory, String> {
         val lower = name.lowercase(Locale.ROOT).trim()
 
-        // Direct exact match
+        // 1. Direct exact match
         groceryDictionary[lower]?.let { return it }
 
-        // Substring / token matching
-        for ((key, pair) in groceryDictionary) {
-            if (lower.contains(key) || key.contains(lower)) {
-                return pair
+        // 2. Singular / Plural exact match
+        if (lower.endsWith("s")) {
+            groceryDictionary[lower.dropLast(1)]?.let { return it }
+        } else {
+            groceryDictionary["${lower}s"]?.let { return it }
+        }
+
+        // 3. Multi-word phrase matches first (longest match takes precedence, e.g. "black pepper" in Pantry vs "pepper" in Produce)
+        val multiWordMatches = groceryDictionary.entries
+            .filter { it.key.contains(" ") && (lower.contains(it.key) || lower.contains(it.key.dropLast(1))) }
+            .sortedByDescending { it.key.length }
+        if (multiWordMatches.isNotEmpty()) {
+            return multiWordMatches.first().value
+        }
+
+        // 4. Whole token matching (prevents substring collisions like "red" matching "bread")
+        val words = lower.split(Regex("""\s+""")).filter { it.isNotBlank() }
+        for (word in words) {
+            groceryDictionary[word]?.let { return it }
+            if (word.endsWith("s")) {
+                groceryDictionary[word.dropLast(1)]?.let { return it }
+            } else {
+                groceryDictionary["${word}s"]?.let { return it }
             }
         }
 
-        // Heuristics based on keyword indicators
+        // 5. Heuristics based on keyword indicators
         return when {
             lower.contains("juice") || lower.contains("tea") || lower.contains("coffee") || lower.contains("water") || lower.contains("drink") -> 
                 GroceryCategory.BEVERAGES to "bottle"
@@ -399,7 +429,7 @@ object SmartAddParser {
                 GroceryCategory.BAKERY to "pack"
             lower.contains("meat") || lower.contains("chicken") || lower.contains("fish") || lower.contains("pork") || lower.contains("beef") -> 
                 GroceryCategory.MEAT to "kg"
-            lower.contains("fruit") || lower.contains("apple") || lower.contains("berry") || lower.contains("vegetable") || lower.contains("salad") -> 
+            lower.contains("fruit") || lower.contains("apple") || lower.contains("berry") || lower.contains("vegetable") || lower.contains("salad") || lower.contains("pepper") -> 
                 GroceryCategory.PRODUCE to "kg"
             lower.contains("rice") || lower.contains("flour") || lower.contains("oil") || lower.contains("dal") || lower.contains("spice") || lower.contains("sauce") -> 
                 GroceryCategory.PANTRY to "kg"
@@ -433,11 +463,11 @@ object SmartAddParser {
         val trimmed = name.trim().lowercase(Locale.ROOT)
         if (trimmed.isBlank()) return null
         return existingItems.firstOrNull { item ->
+            if (item.isCompleted) return@firstOrNull false
             val itemName = item.name.trim().lowercase(Locale.ROOT)
             itemName == trimmed || 
-            itemName == trimmed + "s" || 
-            itemName + "s" == trimmed ||
-            (itemName.contains(trimmed) && trimmed.length >= 3)
+            itemName == "${trimmed}s" || 
+            "${itemName}s" == trimmed
         }
     }
 

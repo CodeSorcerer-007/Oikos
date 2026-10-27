@@ -1,7 +1,9 @@
 package com.example.oikos.model
 
+import java.util.UUID
+
 data class GroceryList(
-    val id: String,
+    val id: String = UUID.randomUUID().toString(),
     val name: String,
     val emoji: String = "🛒",
     val budget: Double? = null,

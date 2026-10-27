@@ -318,8 +318,15 @@ fun SettingsSheet(
                             val json = onExportBackup()
                             showExportedDialog = json
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            clipboard.setPrimaryClip(ClipData.newPlainText("Oikos Backup", json))
-                            Toast.makeText(context, "Backup copied to clipboard!", Toast.LENGTH_SHORT).show()
+                            val clip = ClipData.newPlainText("Oikos Backup", json).apply {
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                                    description.extras = android.os.PersistableBundle().apply {
+                                        putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
+                                    }
+                                }
+                            }
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(context, "Backup copied securely to clipboard!", Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier.weight(1f),
